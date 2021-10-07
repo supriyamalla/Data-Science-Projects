@@ -1,0 +1,170 @@
+# Load libraries
+library('tm')
+library('dplyr')
+library('stringr')
+library('tidyr')
+library('factoextra')
+library('ggplot2')
+
+### Read file
+raw <- read.csv('../input/Airplane_Crashes_and_Fatalities_Since_1908.csv', 
+                stringsAsFactors = FALSE)
+
+
+### Some initial formatting and cleaning
+crashes <-
+    raw %>%
+    mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+    rename(Flight = `Flight..`)
+
+### Load text as corpus
+rawtxt <- VCorpus(VectorSource(crashes$Summary))
+
+### Cleaning
+rawtxt <- tm_map(rawtxt, removePunctuation)
+rawtxt <- tm_map(rawtxt, content_transformer(tolower))
+rawtxt <- tm_map(rawtxt, removeWords, stopwords("english"))
+rawtxt <- tm_map(rawtxt, stripWhitespace)
+
+### Create document-terms matrix, removing generic terms
+dtm <- DocumentTermMatrix(rawtxt, control = list(stopwords = c("aircraft", "plane", "crashed", "crash", "flight", "flew", "killed", "due", "resulted", "cause", "caused", "one", "two")))
+dtm
+
+### Remove sparse terms from DTM
+dtms <- removeSparseTerms(dtm, 0.97)
+
+
+
+### Compute distance matrix
+d <- dist(t(dtms), method = "euclidian")
+
+### Compute K-means
+km <- kmeans(d, 16, iter.max = 50, nstart = 10)
+
+
+
+
+### Display results as a list
+grouplist = function(input) {
+    output <- list()
+    for (i in 1:max(input)) {
+        output[[i]] <- names(input[input == i]) 
+    }
+    for (i in output) {
+        cat('* ')
+        cat(i, sep = ", ")
+        cat("\n")
+    }
+}
+
+grouplist(km$cluster)
+
+
+
+
+
+fviz_cluster(km, data = d, geom = "text", show.clust.cent = FALSE, repel = TRUE, labelsize = 3) +
+    theme(legend.position = "none") +
+    labs(title = "", x = "", y = "")
+	
+	
+	
+	
+	
+	
+	
+	### Order terms by frequency
+freq <- colSums(as.matrix(dtm))
+freq <- 
+    freq %>%
+    data.frame(term = names(freq), frequency = freq) %>%
+    select(term, frequency) %>%
+    arrange(desc(frequency)) 
+
+### Plot most frequent terms
+ggplot(freq[1:20, ], aes(x = frequency, y = reorder(term, frequency))) + 
+    geom_point(colour = "#2b83ba") + 
+    geom_segment(aes(xend = 0, yend = term), size = 1, colour = "#2b83ba") +
+    geom_text(aes(label = term, vjust = "middle", hjust = "left"), nudge_x = 10, size = 3.5) +
+    theme(panel.background = element_rect(fill = "white"),
+          panel.grid.major.x = element_line(colour = "#f7f7f7"),
+          panel.grid.major.y = element_blank(),
+          panel.grid.minor = element_blank(), 
+          axis.text.y = element_blank(), 
+          axis.title = element_blank(), 
+          axis.ticks.y = element_blank()) +
+    labs(title = "Occurences of top 20 most frequent terms")
+	
+	
+	
+	
+	
+	
+	### Terms correlation
+assocs <- findAssocs(dtm, as.character(freq[1:20, 1]), corlimit = 0.17)
+print(assocs)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#This is quite enlightening. Let's look at some of the terms associations:
+#Pilot: 'error' is one of the most correlated words, which is consistent with the fact that 60% of crashes are due to pilot errors
+#Approach: the accidents in final approach phase seem to be often caused by confusion in reading instruments and low visibility ('ils', 'instruments', 'visual', 'missed')
+#Engine seems related to shutdown of engine and/or loss of power
+#Runway is associated with 'short', 'end' and 'overran', that could be as well in takeoff or landing phases
+#Failure: we have more context here, suggesting that it can be pilot, maintainance, procedure or system failures
+#Landing: this shows that it is not necessarily about the standard landing phase, but rather about landing gears, or emergency landings
+#Weather and Conditions suggest that visibility is one of the most important crashes factors in bad weather
+
+
+
+
+
+
+###################################################### WORD CLOUD ###################################################################333
+
+library(tm)
+library(caret)
+library(readr)
+library(ggplot2)
+library(wordcloud)
+
+system("ls ../input")
+crashdata <- read.csv('../input/Airplane_Crashes_and_Fatalities_Since_1908.csv', header = TRUE, sep=',')
+
+data <- Corpus(VectorSource(crashdata$Summary))
+corpus_clean <- tm_map(data, tolower)
+corpus_clean <- tm_map(corpus_clean, removeNumbers)
+corpus_clean <- tm_map(corpus_clean, removeWords, stopwords())
+corpus_clean <- tm_map(corpus_clean, removePunctuation)
+corpus_clean <- tm_map(corpus_clean, PlainTextDocument)
+corpus_clean <- tm_map(corpus_clean, removeWords, "flight")
+corpus_clean <- tm_map(corpus_clean, removeWords, "crashed")
+corpus_clean <- tm_map(corpus_clean, removeWords, "plane")
+corpus_clean <- tm_map(corpus_clean, removeWords, "aircraft")
+
+wordcloud(corpus_clean, min.freq = 100, random.order = FALSE)
+
+
+
+
+
+
+
+
