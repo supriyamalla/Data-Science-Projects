@@ -40,7 +40,7 @@ for index, row in vendor_df.iterrows():
             #df=pd.DataFrame({'Vendor Name': [vendor], 'Vendor Link': [data]})
             vendor_list.append(row['Vendor Name'])
             vendor_state.append(row['Vendor State'])
-            vendor_type.append(row['Vendor Type']) //Vendor Type is whether the vendor is an individual or an organization
+            vendor_type.append(row['Vendor Type']) #Vendor Type is whether the vendor is an individual or an organization
             vendor_link.append(data)
     
             break
