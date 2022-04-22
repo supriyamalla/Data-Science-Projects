@@ -25,8 +25,8 @@ vendor_type=[]
 vendor_df=pd.read_excel('Write the path of your file.xlsx')
 
 for index, row in vendor_df.iterrows():    
-    url = 'https://google.com/search?q=' + str(row['Vendor Name']) + ' ' +str(row['Vendor State']) + ' '+'Linkedin' //Refining the search to the company/individual name by adding state to the search
-    //you can also add other variables to further optimize the search
+    url = 'https://google.com/search?q=' + str(row['Vendor Name']) + ' ' +str(row['Vendor State']) + ' '+'Linkedin' #Refining the search to the company/individual name by adding state to the search
+    #you can also add other variables to further optimize the search
     r = requests.get(url)
   
     soup = BeautifulSoup(r.text, 'lxml')
