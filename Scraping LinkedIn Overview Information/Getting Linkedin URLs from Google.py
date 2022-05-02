@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import pandas as pd
-#from pandas import DataFrame
+
 
 A = ("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36",
@@ -17,10 +17,12 @@ A = ("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome
         )
 Agent = A[random.randrange(len(A))]
 headers = {'user-agent': Agent}
-vendor_list=[]
-vendor_link=[]
-vendor_state=[]
-vendor_type=[]
+
+#vendors are just company names/individuals you want to look for
+vendor_list=[] # Empty list to read all vendor names
+vendor_link=[] #Empty list to store all vendor profile links
+vendor_state=[] # Empty list to read state to further refine google searches
+vendor_type=[] # Empty list to read two types of vendors Ind (Individual) or ORG (Organization)
 
 vendor_df=pd.read_excel('Write the path of your file.xlsx')
 
@@ -34,7 +36,7 @@ for index, row in vendor_df.iterrows():
     for link in soup.find_all('a', href=True):
         data = link.get('href')
        
-        if('url' in data):
+        if('url' in data): #if the data variable contains word "URL" only getting that information
             data=data.split('=', 1)[1]
             data=data.split('&', 1)[0]
             #df=pd.DataFrame({'Vendor Name': [vendor], 'Vendor Link': [data]})
